@@ -108,6 +108,7 @@ body::before{content:'';position:fixed;inset:0;
 .toggle-row:first-child{border-top:none;padding-top:0}
 .toggle-row .info strong{display:block;font-size:13px;font-weight:500;color:var(--fg)}
 .toggle-row .info span{display:block;font-family:var(--mono);font-size:9px;color:var(--fg-3);margin-top:2px;letter-spacing:0.05em;text-transform:uppercase}
+.toggle-row.disabled{opacity:0.35;pointer-events:none}
 .switch{position:relative;width:40px;height:22px;background:var(--line-2);border-radius:var(--r-pill);border:none;padding:0;cursor:pointer;transition:background 0.2s;flex-shrink:0}
 .switch::after{content:'';position:absolute;top:2px;right:2px;width:18px;height:18px;background:var(--fg-3);border-radius:50%;transition:all 0.2s var(--ease-spring)}
 .switch.active{background:var(--accent)}
@@ -150,7 +151,8 @@ body::before{content:'';position:fixed;inset:0;
 .output.colored .output-pre{display:none}
 .output.colored .output-canvas{display:block}
 .output.glitch .output-body::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,0,0,0.4) 2px,rgba(0,0,0,0.4) 3px);pointer-events:none;mix-blend-mode:multiply}
-.output.glitch .output-pre,.output.glitch .output-canvas{filter:contrast(1.15) drop-shadow(1.5px 0 0 rgba(255,0,80,0.5)) drop-shadow(-1.5px 0 0 rgba(0,180,255,0.5))}
+.output.glitch .output-pre,.output.glitch .output-canvas{filter:contrast(1.15) drop-shadow(1px 0 0 rgba(255,0,80,0.35)) drop-shadow(-1px 0 0 rgba(0,180,255,0.35))}
+body.light .output.glitch .output-pre,body.light .output.glitch .output-canvas{filter:contrast(1.08)}
 
 .sprite-wrap{background:#000;padding:14px;display:flex;justify-content:center;border-radius:var(--r-2)}
 #spriteCanvas{width:100%;max-width:320px;aspect-ratio:1;touch-action:none;border-radius:var(--r-2);background:#000;cursor:crosshair;display:block}
@@ -211,7 +213,7 @@ body::before{content:'';position:fixed;inset:0;
         <h1>GALAXY</h1>
         <div class="sub" id="brandSub">استودیو کهکشانی · ASCII</div>
     </div>
-    <div class="ver">V6.2</div>
+    <div class="ver">V6.4</div>
     <div class="lang-seg">
         <button id="langFa" onclick="setLang('fa')">فا</button>
         <button id="langEn" onclick="setLang('en')">EN</button>
@@ -302,7 +304,7 @@ body::before{content:'';position:fixed;inset:0;
             <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
         </div>
         <div class="section-body"><div><div class="section-content">
-            <div class="toggle-row" onclick="toggleColored()"><div class="info"><strong id="advColored">خروجی رنگی</strong><span>COLORED</span></div><button class="switch" id="coloredSwitch" type="button"></button></div>
+            <div class="toggle-row" id="coloredRow" onclick="toggleColored()"><div class="info"><strong id="advColored">خروجی رنگی</strong><span>COLORED</span></div><button class="switch" id="coloredSwitch" type="button"></button></div>
             <div class="toggle-row" onclick="toggleInvert()"><div class="info"><strong id="advInvert">معکوس کردن</strong><span>INVERT</span></div><button class="switch" id="invertSwitch" type="button"></button></div>
             <div class="toggle-row" onclick="toggleDetail()"><div class="info"><strong id="advDetail">وضوح بالا</strong><span>HIGH DETAIL</span></div><button class="switch" id="detailSwitch" type="button"></button></div>
             <div class="toggle-row" onclick="toggleFrame()"><div class="info"><strong id="advFrame">قاب دور خروجی</strong><span>BORDER FRAME</span></div><button class="switch" id="frameSwitch" type="button"></button></div>
@@ -368,6 +370,7 @@ const I18N = {
         'up.title':'انتخاب تصویر','up.sub':'از گالری یا فایل‌ها',
         'toast.saved':'ذخیره شد ✓','toast.copied':'کپی شد','toast.noOutput':'اول یه خروجی بساز',
         'toast.applied':'قالب اعمال شد ✓','toast.recStarted':'ضبط شروع شد...','toast.recStopped':'ویدیو ذخیره شد ✓','toast.galleryEmpty':'هنوز چیزی ذخیره نشده',
+        'toast.coloredTextOff':'خروجی رنگی فقط برای تصویر و دوربین',
     },
     en: {
         'brand.sub':'Cosmic ASCII Studio','tab.text':'Text','tab.image':'Image','tab.camera':'Camera','tab.anim':'Anim',
@@ -379,6 +382,7 @@ const I18N = {
         'up.title':'Choose image','up.sub':'From gallery or files',
         'toast.saved':'Saved ✓','toast.copied':'Copied','toast.noOutput':'Create output first',
         'toast.applied':'Preset applied ✓','toast.recStarted':'Recording...','toast.recStopped':'Video saved ✓','toast.galleryEmpty':'Nothing saved yet',
+        'toast.coloredTextOff':'Colored mode is for image/camera',
     }
 };
 function t(k, v) { let s = (I18N[state.lang] && I18N[state.lang][k]) || k; if (v) Object.entries(v).forEach(([a,b]) => s = s.replace(a,b)); return s; }
@@ -389,7 +393,7 @@ const CHIP_LABELS = {
 };
 function label(k) { return (CHIP_LABELS[state.lang] && CHIP_LABELS[state.lang][k]) || k; }
 
-/* ============ PRESETS (SVG icons) ============ */
+/* ============ PRESETS ============ */
 const PRESET_ICONS = {
     insta:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.9" fill="currentColor"/></svg>',
     tg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3L2 10.5l7 2.5 2 8 4.5-5.5L22 3z"/></svg>',
@@ -419,6 +423,7 @@ const ANIM_CHARS = ['█','▓','▒','░','●','○','◆','★','✦','✧',
 const ANIM_SIZES = [8,12,16,24];
 const CONFIG = {maxChars:14};
 const CHAR_W = 0.6, LINE_H = 1.16, CHAR_ASPECT = LINE_H / CHAR_W;
+const COLOR_CAP = 200;
 
 /* ============ STATE ============ */
 const defaultState = {lang:'fa',charset:'classic',theme:'ember',font:'vazir',aspect:'square',exportSize:'1024',width:80,brightness:100,contrast:100,invert:false,detail:false,frame:false,frameStyle:'sharp',colored:false,live:false,glitch:false,customColors:false,customBg:'#000000',customFg:'#ff5500',uiTheme:'dark',sourceImage:null,output:'',outputCanvas:null,tab:'text',gallery:[],animGridSize:12,animFrames:[],animCurrentFrame:0,animChar:'█',animFps:8,animPlaying:false};
@@ -446,7 +451,10 @@ function buildGalaxyLogo(){
 function mkC(d,NS){const c=document.createElementNS(NS,'circle');c.setAttribute('cx',d.x);c.setAttribute('cy',d.y);c.setAttribute('r',d.r);c.setAttribute('fill','currentColor');if(d.o!==undefined)c.setAttribute('opacity',d.o);return c;}
 
 /* ============ INIT ============ */
+let inited = false;
 function init(){
+    if (inited) return;
+    inited = true;
     buildGalaxyLogo();
     loadState();
     if(!state.animFrames || !state.animFrames.length){state.animFrames=[createEmptyFrame(state.animGridSize)];state.animCurrentFrame=0;}
@@ -458,6 +466,8 @@ function init(){
     bindTabs();
     bindInputs();
     syncUI();
+    updateThemeColors();
+    updateColoredRowState();
     renderInputContent();
     renderGallery();
     generate();
@@ -483,6 +493,18 @@ function updateStyleMeta(){$('styleMeta').textContent = state.customColors ? 'CU
 function updateSettingsMeta(){const sz=EXPORTS[state.exportSize]?.size||0;$('settingsMeta').textContent=`${sz||'auto'}·${state.aspect==='square'?'1:1':'orig'}`}
 function updateGridHint(){const size=getExportSize();const cell=size/state.width;const hint=$('gridHint');const glyphs=`${state.width} × ${state.width}`;if(size===0)hint.textContent=glyphs+' · auto';else{hint.textContent=`${glyphs} · ${cell.toFixed(1)}px`;const wrap=hint.parentElement;if(cell<3){wrap.style.background='rgba(239,68,68,0.08)';wrap.style.color='var(--danger)'}else if(cell<5){wrap.style.background='rgba(245,158,11,0.08)';wrap.style.color='var(--warn)'}else{wrap.style.background='var(--accent-soft)';wrap.style.color='var(--accent)'}}}
 
+function updateColoredRowState(){
+    const row = $('coloredRow');
+    if(!row) return;
+    const isText = state.tab === 'text';
+    row.classList.toggle('disabled', isText);
+    if(isText && state.colored){
+        state.colored = false;
+        $('coloredSwitch').classList.remove('active');
+        saveState();
+    }
+}
+
 /* ============ LANGUAGE ============ */
 function setLang(lang){if(state.lang===lang)return;state.lang=lang;applyLanguage(lang);saveState();if(navigator.vibrate)navigator.vibrate(12)}
 
@@ -493,8 +515,7 @@ function applyLanguage(lang, initial){
     document.body.style.fontFamily = lang==='fa'?"'Vazirmatn', system-ui, sans-serif":"-apple-system, 'Segoe UI', system-ui, sans-serif";
     $('langFa').classList.toggle('active', lang==='fa');
     $('langEn').classList.toggle('active', lang==='en');
-    
-    // ★ همه‌ی متن‌های ثابت
+
     $('brandSub').textContent = t('brand.sub');
     $('tabText').textContent = t('tab.text');
     $('tabImage').textContent = t('tab.image');
@@ -516,13 +537,12 @@ function applyLanguage(lang, initial){
     $('mainBtnLabel').textContent = t('btn.preview');
     $('dlBtnLabel').textContent = t('btn.dl');
     $('copyBtnLabel').textContent = t('btn.copy');
-    
+
     updateInputSub();
     buildChips();
     buildPresets();
-    
+
     if(!initial){
-        // حفظ مقدار input
         const ti = $('textInput');
         if (ti) savedTextValue = ti.value;
         renderInputContent();
@@ -531,7 +551,6 @@ function applyLanguage(lang, initial){
         generate();
         updateMeta();
         renderGallery();
-        // خروجی خالی رو دوباره ترجمه کن
         if (!state.output && !state.outputCanvas) {
             $('output').textContent = t('output.empty');
         }
@@ -570,6 +589,7 @@ function bindTabs(){
             if(state.tab==='camera') startCamera(); else { stopCamera(); stopLive(); }
             if(state.tab==='anim') setTimeout(()=>{drawSpriteCanvas();renderFrameStrip()},50);
             else stopAnimPlay();
+            updateColoredRowState();
             renderInputContent();
             updateInputSub();
             if(state.tab!=='anim') generate();
@@ -586,7 +606,7 @@ function renderInputContent(){
     if(prev) savedTextValue = prev.value;
     const c = $('inputContent');
     c.innerHTML = '';
-    
+
     if(state.tab==='text'){
         $('inputIcon').textContent = '✎';
         const inp = document.createElement('input');
@@ -871,20 +891,23 @@ function stopAnimPlay(){
     drawSpriteCanvas();
     if(navigator.vibrate)navigator.vibrate(15);
 }
+
 let mediaRecorder = null, recordedChunks = [];
+let recInterval = null, recStartTime = 0, recIdx = 0, recOutCanvas = null, recOutCtx = null, recDuration = 0;
 function recordAnim(){
     if(mediaRecorder&&mediaRecorder.state==='recording'){mediaRecorder.stop();return}
     try{
-        const outCanvas = document.createElement('canvas');
-        const size = 512; outCanvas.width = size; outCanvas.height = size;
-        const octx = outCanvas.getContext('2d');
-        const stream = outCanvas.captureStream(30);
+        recOutCanvas = document.createElement('canvas');
+        const size = 512; recOutCanvas.width = size; recOutCanvas.height = size;
+        recOutCtx = recOutCanvas.getContext('2d');
+        const stream = recOutCanvas.captureStream(30);
         const opts = {mimeType:'video/webm;codecs=vp9'};
         if(!MediaRecorder.isTypeSupported(opts.mimeType)) opts.mimeType = 'video/webm';
         mediaRecorder = new MediaRecorder(stream,opts);
         recordedChunks = [];
         mediaRecorder.ondataavailable = e=>{if(e.data.size>0)recordedChunks.push(e.data)};
         mediaRecorder.onstop = ()=>{
+            if(recInterval){clearInterval(recInterval);recInterval=null}
             const blob = new Blob(recordedChunks,{type:'video/webm'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -898,29 +921,37 @@ function recordAnim(){
         const rb = $('recBtn');
         if(rb){rb.textContent=t('btn.recStop');rb.classList.add('rec')}
         toast(t('toast.recStarted'));
+
         const totalFrames = state.animFrames.length;
         const cycle = (totalFrames/state.animFps)*1000;
-        const dur = Math.min(cycle*3,8000);
-        const start = performance.now();
-        let idx = 0, lastFt = start;
-        const recLoop = now=>{
-            if(!mediaRecorder||mediaRecorder.state!=='recording') return;
-            if(now-start>=dur){mediaRecorder.stop();return}
-            const interval = 1000/state.animFps;
-            if(now-lastFt>=interval){
-                lastFt = now;
-                octx.fillStyle = getBgColor(); octx.fillRect(0,0,size,size);
-                const frame = state.animFrames[idx];
-                const gs = state.animGridSize, cw = size/gs;
-                octx.fillStyle = getFgColor();
-                octx.font = `500 ${cw*1.1}px 'JetBrains Mono','Courier New',monospace`;
-                octx.textAlign = 'center'; octx.textBaseline = 'middle';
-                for(let y=0;y<gs;y++)for(let x=0;x<gs;x++){const ch=frame[y]&&frame[y][x];if(ch&&ch!==' ')octx.fillText(ch,(x+0.5)*cw,(y+0.55)*cw)}
-                idx = (idx+1)%totalFrames;
-            }
-            requestAnimationFrame(recLoop);
+        recDuration = Math.min(cycle*3, 8000);
+        recStartTime = performance.now();
+        recIdx = 0;
+
+        const drawRecFrame = () => {
+            const size = recOutCanvas.width;
+            recOutCtx.fillStyle = getBgColor(); recOutCtx.fillRect(0,0,size,size);
+            const frame = state.animFrames[recIdx];
+            const gs = state.animGridSize, cw = size/gs;
+            recOutCtx.fillStyle = getFgColor();
+            recOutCtx.font = `500 ${cw*1.1}px 'JetBrains Mono','Courier New',monospace`;
+            recOutCtx.textAlign = 'center'; recOutCtx.textBaseline = 'middle';
+            for(let y=0;y<gs;y++)for(let x=0;x<gs;x++){const ch=frame[y]&&frame[y][x];if(ch&&ch!==' ')recOutCtx.fillText(ch,(x+0.5)*cw,(y+0.55)*cw)}
         };
-        requestAnimationFrame(recLoop);
+
+        drawRecFrame();
+        recInterval = setInterval(() => {
+            if(!mediaRecorder || mediaRecorder.state!=='recording'){
+                if(recInterval){clearInterval(recInterval);recInterval=null}
+                return;
+            }
+            if(performance.now()-recStartTime >= recDuration){
+                mediaRecorder.stop();
+                return;
+            }
+            recIdx = (recIdx+1) % totalFrames;
+            drawRecFrame();
+        }, 1000/state.animFps);
     }catch(e){toast('Recording not supported')}
 }
 
@@ -931,6 +962,7 @@ function generate(){
     if(state.live&&state.tab==='camera') return;
     if(state.tab==='text') return fromText();
     if(state.tab==='image'&&state.sourceImage) return fromSource();
+    if(state.tab==='camera'&&state.sourceImage) return fromSource();
 }
 function fromText(){
     const ti = $('textInput'); if(!ti) return;
@@ -943,8 +975,10 @@ function fromText(){
     const ctx = canvas.getContext('2d');
     ctx.font = fontStr;
     const w = ctx.measureText(text).width;
-    canvas.width = Math.ceil(w)+padding*2;
-    canvas.height = fontSize+padding*2;
+    // ✅ FIX: ensure even total width for pixel-perfect centering
+    const rawW = Math.ceil(w + padding * 2);
+    canvas.width = rawW % 2 === 0 ? rawW : rawW + 1;
+    canvas.height = fontSize + padding * 2;
     const c = canvas.getContext('2d');
     c.fillStyle = '#000'; c.fillRect(0,0,canvas.width,canvas.height);
     c.fillStyle = '#fff'; c.font = fontStr;
@@ -989,11 +1023,15 @@ function updateMeta(){
     meta.classList.remove('warn','danger');
     if(!state.output&&!state.outputCanvas){meta.textContent='—';return}
     let gridW,gridH;
-    if(state.output){const lines=state.output.split('\n');gridW=Math.max(...lines.map(l=>l.length));gridH=lines.length}
+    if(state.output){const lines=state.output.split('\n');gridW=lines.reduce((m,l)=>Math.max(m,l.length),0);gridH=lines.length}
     else{gridW=state.width;gridH=state.width}
+    let capped = '';
+    if(state.outputCanvas && state.colored && (gridW > COLOR_CAP || gridH > COLOR_CAP)) {
+        capped = ` · cap ${COLOR_CAP}`;
+    }
     const sizeLabel = size===0?'auto':`${size}px`;
     const cell = size===0?0:Math.round((size/Math.max(gridW,gridH))*10)/10;
-    let text = `${gridW}×${gridH} · ${sizeLabel}`;
+    let text = `${gridW}×${gridH} · ${sizeLabel}${capped}`;
     if(cell>0){text+=` · ${cell}px`;if(cell<3)meta.classList.add('danger');else if(cell<5)meta.classList.add('warn')}
     meta.textContent = text;
 }
@@ -1025,7 +1063,7 @@ function renderColoredCanvas(src){
     const charset = CHARSETS[state.charset].chars;
     const chars = state.invert?[...charset].reverse().join(''):charset;
     const {targetW,targetH} = computeTargetDims(src.width,src.height);
-    const capW = Math.min(targetW,120), capH = Math.min(targetH,120);
+    const capW = Math.min(targetW, COLOR_CAP), capH = Math.min(targetH, COLOR_CAP);
     const sample = document.createElement('canvas');
     sample.width = capW; sample.height = capH;
     const sctx = sample.getContext('2d');
@@ -1033,11 +1071,11 @@ function renderColoredCanvas(src){
     sctx.filter = `brightness(${state.brightness}%) contrast(${state.contrast}%)`;
     sctx.drawImage(src,0,0,capW,capH);
     const data = sctx.getImageData(0,0,capW,capH).data;
-    const cellW = 7, cellH = 9;
+    const cellW = 6, cellH = 8;
     const out = document.createElement('canvas');
     out.width = capW*cellW; out.height = capH*cellH;
     const ctx = out.getContext('2d');
-    ctx.fillStyle = '#000'; ctx.fillRect(0,0,out.width,out.height);
+    ctx.fillStyle = getBgColor(); ctx.fillRect(0,0,out.width,out.height);
     ctx.font = `700 ${cellH-1}px 'JetBrains Mono', monospace`;
     ctx.textBaseline = 'top';
     for(let y=0;y<capH;y++)for(let x=0;x<capW;x++){
@@ -1060,7 +1098,7 @@ function showColoredCanvas(canvas){
 function wrapFrame(ascii){
     const f = FRAMES[state.frameStyle];
     const lines = ascii.split('\n');
-    const w = Math.max(...lines.map(l=>l.length));
+    const w = lines.reduce((m,l)=>Math.max(m,l.length),0);
     const top = f.top+f.mid.repeat(w+2)+f.corner;
     const bot = f.botLeft+f.mid.repeat(w+2)+f.botRight;
     const body = lines.map(l=>f.side+' '+l+' '.repeat(w-l.length)+' '+f.side);
@@ -1087,15 +1125,28 @@ function onFileSelect(e){
     r.readAsDataURL(f);
 }
 function clearImage(){state.sourceImage=null;const fi=$('fileInput');if(fi)fi.value='';const ip=$('imagePreview');if(ip)ip.classList.remove('active');setOutput('')}
+
 let camStream = null;
+let camStarting = false;
 async function startCamera(){
-    if(camStream) return;
+    if(camStream || camStarting) return;
+    camStarting = true;
     try{
-        camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280}},audio:false});
-        const v = $('video'); if(v){v.srcObject = camStream; await v.play()}
+        const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280}},audio:false});
+        if(camStream || state.tab !== 'camera'){
+            stream.getTracks().forEach(t=>t.stop());
+            return;
+        }
+        camStream = stream;
+        const v = $('video');
+        if(v){v.srcObject = camStream; await v.play().catch(()=>{})}
     }catch(err){}
+    finally{ camStarting = false; }
 }
-function stopCamera(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}}
+function stopCamera(){
+    if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
+    const v = $('video'); if(v) v.srcObject = null;
+}
 function capturePhoto(){
     const v = $('video'); if(!v||!v.videoWidth) return;
     const c = document.createElement('canvas');
@@ -1111,7 +1162,7 @@ function capturePhoto(){
 function clearCapture(){state.sourceImage=null;const cp=$('capturedPreview');if(cp)cp.classList.remove('active');const camp=$('cameraPreview');if(camp)camp.classList.add('active');setOutput('')}
 let liveRAF = null, lastLiveFrame = 0;
 function toggleLive(){state.live=!state.live;$('liveSwitch').classList.toggle('active',state.live);if(navigator.vibrate)navigator.vibrate(12);if(state.live)loopLive();else stopLive()}
-function stopLive(){if(liveRAF){cancelAnimationFrame(liveRAF);liveRAF=null}state.live=false;$('liveSwitch').classList.remove('active')}
+function stopLive(){if(liveRAF){cancelAnimationFrame(liveRAF);liveRAF=null}state.live=false;const ls=$('liveSwitch');if(ls)ls.classList.remove('active')}
 function loopLive(){
     if(!state.live) return;
     liveRAF = requestAnimationFrame(loopLive);
@@ -1155,8 +1206,20 @@ function renderToCanvas(forceSize){
     }
     if(!state.output) return null;
     const lines = state.output.split('\n');
-    const maxLen = Math.max(...lines.map(l=>l.length),1);
+    const maxLen = lines.reduce((m,l)=>Math.max(m,l.length),1);
     const numLines = lines.length;
+
+    // ✅ FIX: compute actual ink bounds for precise horizontal centering
+    let inkMin = Infinity, inkMax = -Infinity;
+    for (const line of lines) {
+        const firstInk = line.search(/\S/);
+        if (firstInk === -1) continue;
+        if (firstInk < inkMin) inkMin = firstInk;
+        let lastInk = line.length - 1;
+        while (lastInk >= 0 && line[lastInk] === ' ') lastInk--;
+        if (lastInk > inkMax) inkMax = lastInk;
+    }
+
     let targetW,targetH;
     const natW = maxLen*10.2, natH = numLines*19.72, natRatio = natW/natH;
     if(exportSize===0){targetW=Math.round(natW)+60;targetH=Math.round(natH)+60}
@@ -1172,12 +1235,21 @@ function renderToCanvas(forceSize){
     const cellW = availW/maxLen, cellH = availH/numLines;
     const fontPx = cellH/LINE_H;
     const hStretch = cellW/(fontPx*CHAR_W);
+
+    // ✅ FIX: horizontal shift to center the ink, not the grid
+    let xShift = 0;
+    if (inkMin !== Infinity) {
+        const inkCenter = (inkMin + inkMax + 1) / 2;
+        const gridCenter = maxLen / 2;
+        xShift = (gridCenter - inkCenter) * cellW;
+    }
+
     ctx.fillStyle = theme.fg;
     ctx.textBaseline = 'top'; ctx.textAlign = 'left';
     lines.forEach((line,i)=>{
         if(!line) return;
         ctx.save();
-        ctx.translate(pad,pad+i*cellH);
+        ctx.translate(pad + xShift, pad + i*cellH);
         ctx.scale(hStretch,1);
         ctx.font = `500 ${fontPx}px 'JetBrains Mono','Courier New',monospace`;
         ctx.fillText(line,0,0);
@@ -1253,17 +1325,40 @@ function renderGallery(){
         grid.appendChild(div);
     });
 }
+function makeSourceThumb(){
+    if(!state.sourceImage) return null;
+    if(state.tab==='text') return null;
+    try{
+        const maxDim = 240;
+        const ratio = state.sourceImage.width / state.sourceImage.height;
+        const c = document.createElement('canvas');
+        if(ratio > 1){ c.width = maxDim; c.height = Math.round(maxDim/ratio); }
+        else { c.height = maxDim; c.width = Math.round(maxDim*ratio); }
+        c.getContext('2d').drawImage(state.sourceImage, 0, 0, c.width, c.height);
+        return c.toDataURL('image/jpeg', 0.7);
+    } catch(e){ return null; }
+}
 function addToGallery(){
     if(!state.output&&!state.outputCanvas) return;
     const canvas = renderToCanvas(256); if(!canvas) return;
-    const thumb = canvas.toDataURL('image/jpeg',0.5);
-    state.gallery.unshift({
-        id:Date.now(),thumb,
+    const thumb = canvas.toDataURL('image/jpeg', 0.5);
+    const item = {
+        id: Date.now(),
+        thumb,
         settings:{charset:state.charset,theme:state.theme,font:state.font,aspect:state.aspect,width:state.width,brightness:state.brightness,contrast:state.contrast,invert:state.invert,detail:state.detail,frame:state.frame,frameStyle:state.frameStyle,colored:state.colored,glitch:state.glitch,customColors:state.customColors,customBg:state.customBg,customFg:state.customFg},
-        text: state.tab==='text'&&$('textInput')?$('textInput').value:null
-    });
-    if(state.gallery.length>12) state.gallery = state.gallery.slice(0,12);
-    saveGallery(); renderGallery();
+        text: state.tab==='text'&&$('textInput')?$('textInput').value:null,
+        sourceThumb: makeSourceThumb(),
+        sourceTab: state.tab,
+    };
+    try {
+        state.gallery.unshift(item);
+        if(state.gallery.length>12) state.gallery = state.gallery.slice(0,12);
+        saveGallery();
+    } catch(e) {
+        state.gallery = state.gallery.slice(0, 6);
+        try { saveGallery(); } catch(_) {}
+    }
+    renderGallery();
 }
 function loadFromGallery(item){
     const s = item.settings||{};
@@ -1275,16 +1370,45 @@ function loadFromGallery(item){
         glitch:!!s.glitch,customColors:!!s.customColors,
         customBg:s.customBg||'#000000',customFg:s.customFg||'#ff5500'
     });
-    if(item.text!==null&&item.text!==undefined){
+
+    if(item.sourceThumb){
+        const img = new Image();
+        img.onload = ()=>{
+            state.sourceImage = img;
+            state.tab = 'image';
+            document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab==='image'));
+            $('liveRow').style.display = 'none';
+            stopCamera(); stopLive(); stopAnimPlay();
+            updateColoredRowState();
+            renderInputContent();
+            updateInputSub();
+            syncUI(); buildChips(); updateThemeColors();
+            setTimeout(()=>{
+                const pi = $('previewImg');
+                if(pi) pi.src = item.sourceThumb;
+                const ip = $('imagePreview');
+                if(ip) ip.classList.add('active');
+                generate();
+            }, 40);
+        };
+        img.src = item.sourceThumb;
+    } else if(item.text!==null&&item.text!==undefined){
         state.tab = 'text';
         document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab==='text'));
+        $('liveRow').style.display = 'none';
+        stopCamera(); stopLive(); stopAnimPlay();
+        updateColoredRowState();
         savedTextValue = item.text;
+        syncUI(); buildChips(); updateThemeColors();
+        renderInputContent();
+        if($('textInput')) $('textInput').value = savedTextValue;
+        updateCount();
+        generate();
+    } else {
+        syncUI(); buildChips(); updateThemeColors();
+        renderInputContent();
+        generate();
     }
-    syncUI(); buildChips(); updateThemeColors();
-    renderInputContent();
-    if($('textInput')) $('textInput').value = savedTextValue;
-    updateCount();
-    generate();
     if(navigator.vibrate) navigator.vibrate(20);
 }
 
@@ -1292,7 +1416,13 @@ function loadFromGallery(item){
 function toggleInvert(){state.invert=!state.invert;$('invertSwitch').classList.toggle('active',state.invert);if(navigator.vibrate)navigator.vibrate(12);saveState();generate()}
 function toggleDetail(){state.detail=!state.detail;$('detailSwitch').classList.toggle('active',state.detail);if(navigator.vibrate)navigator.vibrate(12);saveState();generate()}
 function toggleFrame(){state.frame=!state.frame;$('frameSwitch').classList.toggle('active',state.frame);$('frameStyleBox').style.display=state.frame?'block':'none';if(navigator.vibrate)navigator.vibrate(12);saveState();generate()}
-function toggleColored(){state.colored=!state.colored;$('coloredSwitch').classList.toggle('active',state.colored);if(navigator.vibrate)navigator.vibrate(12);saveState();generate()}
+function toggleColored(){
+    if(state.tab==='text'){
+        toast(t('toast.coloredTextOff'));
+        return;
+    }
+    state.colored=!state.colored;$('coloredSwitch').classList.toggle('active',state.colored);if(navigator.vibrate)navigator.vibrate(12);saveState();generate()
+}
 function toggleGlitch(){state.glitch=!state.glitch;$('glitchSwitch').classList.toggle('active',state.glitch);$('outputBox').classList.toggle('glitch',state.glitch);if(navigator.vibrate)navigator.vibrate(12);saveState()}
 function toggleCustom(){
     state.customColors = !state.customColors;
@@ -1314,7 +1444,10 @@ function toast(msg){
 }
 
 /* ============ INPUT BINDINGS ============ */
+let inputsBound = false;
 function bindInputs(){
+    if(inputsBound) return;
+    inputsBound = true;
     ['width','brightness','contrast'].forEach(key=>{
         const slider = $(key==='width'?'widthSlider':(key==='brightness'?'brightSlider':'contrastSlider'));
         if(!slider) return;
@@ -1335,6 +1468,14 @@ function bindInputs(){
         });
     });
 }
+
+/* ============ CLEANUP ============ */
+window.addEventListener('beforeunload', ()=>{
+    try{ stopCamera(); }catch(e){}
+    try{ stopLive(); }catch(e){}
+    try{ if(recInterval){clearInterval(recInterval);recInterval=null} }catch(e){}
+    try{ if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop(); }catch(e){}
+});
 
 /* ============ START ============ */
 document.fonts.ready.then(init);
