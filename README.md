@@ -213,7 +213,7 @@ You're free to use, modify, distribute, and sell this software. Just keep the co
 
 Built by Kianoush Razazi
 
-Crafted with 🧡 from Tehran, Iran
+Crafted with ❤️ from Iran
 
 <br>
 
