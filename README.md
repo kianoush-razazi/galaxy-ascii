@@ -1,4 +1,3 @@
-```markdown
 <div align="center">
 
 <img src="assets/logo.svg" alt="Galaxy" width="150" height="150">
@@ -18,12 +17,7 @@
 [![License](https://img.shields.io/badge/License-MIT-ff5500?style=flat-square)](LICENSE)
 [![Zero Deps](https://img.shields.io/badge/Dependencies-0-22c55e?style=flat-square)](#)
 [![Single File](https://img.shields.io/badge/Single_File-Yes-3b82f6?style=flat-square)](#)
-[![Size](https://img.shields.io/badge/Size-~80KB-8b5cf6?style=flat-square)](#)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-22c55e?style=flat-square)](#contributing)
-
-<br>
-
-<img src="assets/logo.svg" alt="demo" width="60">
 
 </div>
 
@@ -228,4 +222,3 @@ If you find Galaxy useful, please consider giving it a ⭐
 <sub>It helps others discover the project and supports its development.</sub>
 
 </div>
-```
